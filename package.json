@@ -16,5 +16,8 @@
   },
   "devDependencies": {
     "pm2": "^5.3.1"
-  }
+  },
+  "repository": "https://github.com/donkim1212/ch3-2-item-simulator.git",
+  "author": "Dongkyun Kim <donkim0122@gmail.com>",
+  "license": "MIT"
 }
