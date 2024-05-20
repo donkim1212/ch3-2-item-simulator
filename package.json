@@ -1,0 +1,20 @@
+{
+  "name": "ch3-2-item-simulator",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "pm2 start app.js --watch"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "dotenv": "^16.4.5",
+    "dotenv-expand": "^11.0.6",
+    "express": "^4.19.2",
+    "joi": "^17.13.1",
+    "prisma": "^5.14.0"
+  },
+  "devDependencies": {
+    "pm2": "^5.3.1"
+  }
+}
