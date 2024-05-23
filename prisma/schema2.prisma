@@ -10,9 +10,9 @@ datasource db {
 model Items {
   itemCode   Int    @id @map("item_code")
   itemName   String @unique @map("name")
-  itemHealth Int    @map("item_health")
+  itemHealth Int    @default(0) @map("item_health")
   itemPower  Int    @default(0) @map("item_power")
-  itemPrice  Int    @default(0) @map("item_price")
+  itemPrice  Int    @map("item_price")
 
   @@map("Items")
 }
