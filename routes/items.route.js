@@ -1,6 +1,6 @@
 import express from "express";
-import Item from "../schemas/items.schema.js";
-import { itemValidatorJoi as iv } from "../middlewares/items-validator.middleware.js";
+import prisma from "../lib/utils/prisma/index.js";
+import { itemValidatorJoi as iv } from "../middlewares/validators/items-validator.middleware.js";
 import ItemNotFoundError from "../lib/errors/item-not-found.error.js";
 
 const router = express.Router();
@@ -17,13 +17,13 @@ router.post(
     const { item_code, item_name, item_stat } = req.body;
     let msg = `Successfully added the item: ${item_name}`;
     try {
-      const item = new Item({
+      const item = prisma.items.create({
         item_code: item_code,
         item_name: item_name,
         health: item_stat.health,
         power: item_stat.power,
       });
-      await item.save();
+
       return res.status(201).json({ message: msg });
     } catch (err) {
       next(err);
@@ -40,7 +40,9 @@ router.get(
   async (req, res, next) => {
     const item_code = req.params.item_code;
     try {
-      const item = await Item.findOne({ item_code: item_code }).exec();
+      const item = await prisma.items.findFirst({
+        item_code: item_code,
+      });
 
       if (!item) throw new ItemNotFoundError();
 
@@ -49,10 +51,8 @@ router.get(
         message: msg,
         item_code: item.item_code,
         item_name: item.item_name,
-        item_stat: {
-          health: item.health,
-          power: item.power,
-        },
+        item_health: item.health,
+        item_power: item.power,
       });
     } catch (err) {
       next(err);
@@ -65,10 +65,11 @@ router.get(
  */
 router.get("/items", async (req, res) => {
   try {
-    const items = await Item.find()
-      .select("item_code item_name -_id")
-      .sort({ item_code: 1 })
-      .exec();
+    const items = await prisma.characters.findMany({
+      select: { item_code, item_name },
+      orderBy: [{ item_code: "asc" }],
+    });
+
     if (!items) return res.status(200).json({});
     return res.status(200).json(items);
   } catch (err) {
@@ -85,17 +86,27 @@ router.put(
   iv.itemNameValiation,
   iv.itemStatValidation,
   async (req, res) => {
-    const item_code = req.params.item_code;
-    const { item_name, item_stat } = req.body;
-    let msg = `Successfully updated the item with code: ${item_code}`;
     try {
-      const item = await Item.findOneAndUpdate(
-        { item_code: item_code },
-        { item_name: item_name, ...item_stat },
-        { new: true },
-      );
+      const item_code = req.params.item_code;
+      const { item_name, item_health, item_power } = req.body;
+      let msg = `Successfully updated the item.`;
+
+      const item = await prisma.items.findUnique({
+        where: { item_code: item_code },
+      });
 
       if (!item) throw new ItemNotFoundError();
+
+      await prisma.items.update({
+        data: {
+          item_name: item_name,
+          item_health: item_health,
+          item_power: item_power,
+        },
+        where: {
+          item_code: item_code,
+        },
+      });
 
       return res.status(200).json({ message: msg });
     } catch (err) {

@@ -13,11 +13,11 @@ router.post(
   cv.characterNameValidation,
   async (req, res, next) => {
     try {
-      const { name } = req.body;
+      const { character_name } = req.body;
 
       const character = await prisma.characters.create({
         data: {
-          name: name,
+          name: character_name,
         },
       });
 
