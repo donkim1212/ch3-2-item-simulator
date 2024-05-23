@@ -1,5 +1,5 @@
 import express from "express";
-import prisma from "../lib/utils/prisma/index.js";
+import { prisma } from "../lib/utils/prisma/index.js";
 import { characterValidatorJoi as cv } from "../middlewares/validators/characters-validator.middleware.js";
 import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
 
