@@ -1,6 +1,7 @@
 import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
 import { characterValidatorJoi as cv } from "../middlewares/validators/characters-validator.middleware.js";
+import ua from "../middlewares/auths/user-authenticator.middleware.js";
 import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
 
 const router = express.Router();
@@ -10,24 +11,26 @@ const router = express.Router();
  */
 router.post(
   "/characters",
+  ua.authJWT,
   cv.characterNameValidation,
   async (req, res, next) => {
     try {
-      const { character_name } = req.body;
-
+      const { characterName, user } = req.body;
+      console.log(user, "----------------------");
       const character = await prisma.characters.create({
         data: {
-          name: character_name,
+          characterName: characterName,
+          userId: user.userId,
         },
       });
 
       console.log(
         "Character created: ",
-        character.character_id,
-        character.name,
+        character.characterId,
+        character.characterName,
       );
 
-      return res.status(201).json({ character_id: character.character_id });
+      return res.status(201).json({ characterId: character.characterId });
     } catch (err) {
       next(err);
     }
@@ -35,29 +38,26 @@ router.post(
 );
 
 /**
- * READ: Get the data for the given character_id, if present.
+ * READ: Get the data for the given characterId, if present.
  */
 router.get(
-  "/characters/:character_id",
+  "/characters/:characterId",
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
-      const character_id = req.params.character_id;
+      const characterId = req.params.characterId;
       let msg = `Successfully retrieved character data.`;
       const character = await prisma.characters.findFirst({
-        where: { character_id: character_id },
+        where: { characterId: characterId },
         select: {},
       });
-      // const character = await Character.findOne({
-      //   character_id: character_id,
-      // }).populate("equipped");
 
       if (!character) throw new CharacterNotFoundError();
 
       return res.status(200).json({
         message: msg,
         data: {
-          name: character.name,
+          characterName: character.characterName,
           health: character.health,
           power: character.power,
         },
@@ -69,28 +69,28 @@ router.get(
 );
 
 /**
- * UPDATE: Updates the character data by the given character_id, if present.
+ * UPDATE: Updates the character data by the given characterId, if present.
  */
 router.put(
-  "/characters/:character_id",
+  "/characters/:characterId",
   cv.characterIdValidation,
   async (req, res, next) => {
-    // const character_id = req.params.character_id;
+    // const characterId = req.params.characterId;
     res.send(501).json({ errorMessage: "Update user not yet implemented." });
   },
 );
 
 /**
- * DELETE: Deletes the character found by character_id, if present.
+ * DELETE: Deletes the character found by characterId, if present.
  */
 router.delete(
-  "/characters/:character_id",
+  "/characters/:characterId",
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
-      const cid = req.params.character_id;
+      const cid = req.params.characterId;
       let msg = `Successfully deleted user ${cid}`;
-      const character = await Character.deleteOne({ character_id: cid }).exec();
+      const character = await Character.deleteOne({ characterId: cid }).exec();
 
       if (character.deletedCount === 0) throw new CharacterNotFoundError();
 
