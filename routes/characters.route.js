@@ -1,6 +1,6 @@
 import express from "express";
-import Character from "../schemas/characters.schema.js";
-import { characterValidatorJoi as cv } from "../middlewares/characters-validator.middleware.js";
+import { prisma } from "../lib/utils/prisma/index.js";
+import { characterValidatorJoi as cv } from "../middlewares/validators/characters-validator.middleware.js";
 import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
 
 const router = express.Router();
@@ -13,12 +13,12 @@ router.post(
   cv.characterNameValidation,
   async (req, res, next) => {
     try {
-      const { name } = req.body;
+      const { character_name } = req.body;
 
-      // get the count using Character.getNextNumber() in schema's pre
-      // or simply use Trigger set in MongoDB Atlas
-      const character = await Character.create({
-        name: name,
+      const character = await prisma.characters.create({
+        data: {
+          name: character_name,
+        },
       });
 
       console.log(
@@ -44,9 +44,13 @@ router.get(
     try {
       const character_id = req.params.character_id;
       let msg = `Successfully retrieved character data.`;
-      const character = await Character.findOne({
-        character_id: character_id,
-      }).populate("equipped");
+      const character = await prisma.characters.findFirst({
+        where: { character_id: character_id },
+        select: {},
+      });
+      // const character = await Character.findOne({
+      //   character_id: character_id,
+      // }).populate("equipped");
 
       if (!character) throw new CharacterNotFoundError();
 

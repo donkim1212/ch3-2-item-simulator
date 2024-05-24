@@ -1,8 +1,7 @@
 import express from "express";
-import Character from "../schemas/characters.schema.js";
-import Item from "../schemas/items.schema.js";
-import { characterValidatorJoi as cv } from "../middlewares/characters-validator.middleware.js";
-import { itemValidatorJoi as iv } from "../middlewares/items-validator.middleware.js";
+import { prisma } from "../lib/utils/prisma/index.js";
+import { characterValidatorJoi as cv } from "../middlewares/validators/characters-validator.middleware.js";
+import { itemValidatorJoi as iv } from "../middlewares/validators/items-validator.middleware.js";
 import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
 import ItemNotFoundError from "../lib/errors/item-not-found.error.js";
 import InvalidEquipOperationError from "../lib/errors/invalid-equip-operation.error.js";
@@ -20,11 +19,8 @@ router.get(
       const character_id = req.params.character_id;
       let msg = `Retrieving eqipment data for character_id: ${character_id}`;
 
-      const character = await Character.findOne({
+      const character = await prisma.characters.findFirst({
         character_id: character_id,
-      }).populate({
-        path: "equipped",
-        select: { item_code: 1, item_name: 1, _id: 0 },
       });
 
       if (!character) throw new CharacterNotFoundError();
@@ -51,13 +47,15 @@ router.put(
       const character_id = req.params.character_id;
       const { item_code, equip } = req.body;
 
-      const character = await Character.findOne({
+      const character = await prisma.characters.findFirst({
         character_id: character_id,
-      }).exec();
+      });
 
       if (!character) throw new CharacterNotFoundError();
 
-      const item = await Item.findOne({ item_code: item_code });
+      const item = await prisma.items.findFirst({
+        item_code: item_code,
+      });
 
       if (!item) throw new ItemNotFoundError();
 
