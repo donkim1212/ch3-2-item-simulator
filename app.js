@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv/config";
 import dotenvExpand from "dotenv-expand";
-import cookieParser from "cookie-parser";
 import logger from "./middlewares/logger.middleware.js";
 import usersRouter from "./routes/users.route.js";
 import charactersRouter from "./routes/characters.route.js";
