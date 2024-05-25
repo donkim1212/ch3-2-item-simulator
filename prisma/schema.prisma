@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -42,7 +42,7 @@ model Inventories {
   characters  Characters @relation(fields: [characterId], references: [characterId])
   characterId Int        @map("character_id")
 
-  itemCode Int   @map("item_code")
+  itemCode Int @map("item_code")
 
   @@map("Inventories")
 }
@@ -60,4 +60,13 @@ model Equipments {
   itemCode Int
 
   @@map("Equipments")
+}
+
+model Items {
+  itemCode  Int    @id @map("item_code")
+  itemName  String @unique @map("name")
+  itemStat  Json   @map("item_stat")
+  itemPrice Int    @map("item_price")
+
+  @@map("Items")
 }
