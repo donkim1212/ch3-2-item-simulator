@@ -17,6 +17,7 @@ const characterValidatorJoi = {
       return res.status(400).json({ errorMessage: msg });
     }
 
+    req.params.characterId = parseInt(req.params.characterId);
     next();
   },
 
