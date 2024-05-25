@@ -11,7 +11,7 @@ const router = express.Router();
  */
 router.post(
   "/characters",
-  ua.authJWT,
+  ua.authStrict,
   cv.characterNameValidation,
   async (req, res, next) => {
     try {
@@ -42,7 +42,7 @@ router.post(
  */
 router.get(
   "/characters/:characterId",
-  ua.authLight,
+  ua.authOptional,
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
@@ -89,7 +89,7 @@ router.put(
  */
 router.delete(
   "/characters/:characterId",
-  ua.authJWT,
+  ua.authStrict,
   cv.characterIdValidation,
   async (req, res, next) => {
     try {

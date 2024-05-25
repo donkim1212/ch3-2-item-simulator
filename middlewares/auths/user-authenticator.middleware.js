@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const userAuthenticator = {
-  authJWT: async function (req, res, next) {
+  authStrict: async function (req, res, next) {
     try {
       const authorization = req.headers.authorization?.split(" ");
 
@@ -19,7 +19,7 @@ const userAuthenticator = {
       return res.status(403).json({ message: err.message });
     }
   },
-  authLight: async function (req, res, next) {
+  authOptional: async function (req, res, next) {
     try {
       const authorization = req.headers.authorization?.split(" ");
 
