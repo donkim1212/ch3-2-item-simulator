@@ -24,7 +24,7 @@ model Characters {
   characterName String @unique @map("character_name")
   health        Int    @default(500) @map("health")
   power         Int    @default(100) @map("power")
-  money         Int    @default(1000) @map("money")
+  money         Int    @default(10000) @map("money")
 
   users  Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
   userId Int
@@ -37,27 +37,22 @@ model Characters {
 
 model Inventories {
   inventoryId Int @id @default(autoincrement()) @map("inventory_id")
-  money       Int @default(1000) @map("money")
 
   characters  Characters @relation(fields: [characterId], references: [characterId])
   characterId Int        @map("character_id")
 
   itemCode Int @map("item_code")
-
+  count Int @default(0) @map("count")
   @@map("Inventories")
 }
 
 model Equipments {
   equipmentId Int    @id @default(autoincrement()) @map("equipment_id")
-  name        String @map("character_name")
-  health      Int    @default(500) @map("health")
-  power       Int    @default(100) @map("power")
-  money       Int    @default(1000) @map("money")
 
   characters  Characters @relation(fields: [characterId], references: [characterId])
-  characterId Int
+  characterId Int        @map("character_id")
 
-  itemCode Int
+  itemCode Int @map("item_code")
 
   @@map("Equipments")
 }
