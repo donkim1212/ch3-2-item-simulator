@@ -8,25 +8,37 @@ const itemNameSchema = Joi.object({
   itemName: Joi.string().trim().min(1).max(30).required(),
 }).unknown(true);
 const itemStatSchema = Joi.object({
-  itemHealth: Joi.number().optional().integer(),
-  itemPower: Joi.number().optional().integer(),
+  itemStat: {
+    health: Joi.number().integer().optional(),
+    power: Joi.number().integer().optional(),
+  },
 }).unknown(true);
 const itemEquipSchema = Joi.object({
   equip: Joi.boolean().strict().required(),
 }).unknown(true);
 
-const itemValidatorJoi = {
-  itemCodeValidation: async function (req, res, next) {
-    const target = {
-      itemCode: req.body.itemCode || req.params.itemCode,
-    };
+const itemValidationErrorHandler = function (res, err, keyName) {
+  console.log(`Item ${keyName} validation failed: `, err.message);
+  let msg = `Item ${keyName} validation failed.`;
+  return res.status(400).json({ message: msg });
+};
 
-    const validation = itemCodeSchema.validate(target);
+const itemValidatorJoi = {
+  itemCodeParamsValidation: async function (req, res, next) {
+    const validation = itemCodeSchema.validate(req.params);
 
     if (validation.error) {
-      console.log("itemCodeValidation: ", validation.error.message);
-      let msg = `Invalid item_code: ${target.itemCode}`;
-      return res.status(400).json({ errorMessage: msg });
+      return itemValidationErrorHandler(res, validation.error, "code");
+    }
+
+    req.params.itemCode = parseInt(req.params.itemCode);
+    next();
+  },
+  itemCodeBodyValidation: async function (req, res, next) {
+    const validation = itemCodeSchema.validate(req.body);
+
+    if (validation.error) {
+      return itemValidationErrorHandler(res, validation.error, "code");
     }
 
     next();
@@ -35,9 +47,7 @@ const itemValidatorJoi = {
     const validation = itemNameSchema.validate(req.body);
 
     if (validation.error) {
-      console.log("itemNameValidation: ", validation.error.message);
-      let msg = `Invalid item_name: ${req.body.itemName}`;
-      return res.status(400).json({ errorMessage: msg });
+      return itemValidationErrorHandler(res, validation.error, "name");
     }
 
     next();
@@ -46,10 +56,16 @@ const itemValidatorJoi = {
     const validation = itemStatSchema.validate(req.body);
 
     if (validation.error) {
-      console.log("itemStatValidation: ", validation.error.message);
-      let msg = `Invalid item stat given.`;
-      return res.status(400).json({ errorMessage: msg });
+      return itemValidationErrorHandler(res, validation.error, "stat");
     }
+
+    const { itemStat } = req.body;
+    if (!itemStat) {
+      itemStat = { health: 0, power: 0 };
+    }
+    if (!itemStat.health) itemStat.health = 0;
+    if (!itemStat.power) itemStat.power = 0;
+    req.body.itemStat = itemStat;
 
     next();
   },
