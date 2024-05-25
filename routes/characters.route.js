@@ -42,6 +42,7 @@ router.post(
  */
 router.get(
   "/characters/:characterId",
+  ua.authLight,
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
@@ -49,7 +50,12 @@ router.get(
       let msg = `Successfully retrieved character data.`;
       const character = await prisma.characters.findFirst({
         where: { characterId: characterId },
-        select: {},
+        select: {
+          characterName: true,
+          health: true,
+          power: true,
+          money: req.body.user ? true : false,
+        },
       });
 
       if (!character) throw new CharacterNotFoundError();
@@ -57,9 +63,7 @@ router.get(
       return res.status(200).json({
         message: msg,
         data: {
-          characterName: character.characterName,
-          health: character.health,
-          power: character.power,
+          ...character,
         },
       });
     } catch (err) {
@@ -76,7 +80,7 @@ router.put(
   cv.characterIdValidation,
   async (req, res, next) => {
     // const characterId = req.params.characterId;
-    res.send(501).json({ errorMessage: "Update user not yet implemented." });
+    res.send(501).json({ message: "Feature not yet implemented." });
   },
 );
 
@@ -85,14 +89,17 @@ router.put(
  */
 router.delete(
   "/characters/:characterId",
+  ua.authJWT,
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
       const cid = req.params.characterId;
-      let msg = `Successfully deleted user ${cid}`;
-      const character = await Character.deleteOne({ characterId: cid }).exec();
+      let msg = `Successfully deleted character ${cid}`;
+      const character = await prisma.characters.delete({
+        where: { characterId: cid },
+      });
 
-      if (character.deletedCount === 0) throw new CharacterNotFoundError();
+      if (!character) throw new CharacterNotFoundError();
 
       return res.status(200).json({ message: msg });
     } catch (err) {
