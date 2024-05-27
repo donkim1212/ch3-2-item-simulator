@@ -1,12 +1,12 @@
 import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
 import iv from "../middlewares/validators/items-validator.middleware.js";
-import ItemNotFoundError from "../lib/errors/item-not-found.error.js";
+import et from "../lib/errors/error-thrower.js";
 
 const router = express.Router();
 
 /**
- * Create: creates item based on the information given by form
+ * Create: creates item based on the provided data.
  */
 router.post(
   "/items",
@@ -32,7 +32,7 @@ router.post(
 );
 
 /**
- * Read One:
+ * Read One: get one item with the given itemCode.
  */
 router.get(
   "/items/:itemCode",
@@ -40,23 +40,21 @@ router.get(
   async (req, res, next) => {
     const itemCode = req.params.itemCode;
     try {
-      const item = await prisma.items.findFirst({
-        select: {
+      const item = await et.itemChecker(
+        { itemCode: itemCode },
+        {
           itemCode: true,
           itemName: true,
           itemStat: true,
           itemPrice: true,
         },
-        where: { itemCode: itemCode },
-      });
-
-      if (!item) throw new ItemNotFoundError();
+      );
 
       return res.status(200).json({
         itemCode: item.itemCode,
         itemName: item.itemName,
         itemStat: item.itemStat,
-        itemPrice: item.itemPrice,
+        price: item.itemPrice,
       });
     } catch (err) {
       next(err);
@@ -65,7 +63,7 @@ router.get(
 );
 
 /**
- * Read All
+ * Read All: get all items list, ordered by itemCode ascending.
  */
 router.get("/items", async (req, res, next) => {
   try {
@@ -78,7 +76,6 @@ router.get("/items", async (req, res, next) => {
       orderBy: [{ itemCode: "asc" }],
     });
 
-    // if (!items) return res.status(200).json([]);
     return res.status(200).json(items);
   } catch (err) {
     next(err);
@@ -86,7 +83,7 @@ router.get("/items", async (req, res, next) => {
 });
 
 /**
- * Update
+ * Update: update an item based on given changes.
  */
 router.put(
   "/items/:itemCode",
