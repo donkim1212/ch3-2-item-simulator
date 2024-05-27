@@ -12,21 +12,23 @@ const router = express.Router();
  * Read One
  */
 router.get(
-  "/equipments/:character_id",
+  "/equipments/:characterId",
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
-      const character_id = req.params.character_id;
-      let msg = `Retrieving eqipment data for character_id: ${character_id}`;
+      const characterId = req.params.characterId;
 
       const character = await prisma.characters.findFirst({
-        character_id: character_id,
+        // TODO: check equipments table
+        select: {},
+        where: {
+          characterId: characterId,
+        },
       });
 
       if (!character) throw new CharacterNotFoundError();
 
       return res.status(200).json({
-        message: msg,
         data: character.equipped,
       });
     } catch (err) {
@@ -39,16 +41,16 @@ router.get(
  * Update
  */
 router.put(
-  "/equipments/:character_id",
+  "/equipments/:characterId",
   cv.characterIdValidation,
-  iv.itemCodeValidation,
+  iv.itemCodeBodyValidation,
   async (req, res, next) => {
     try {
-      const character_id = req.params.character_id;
+      const characterId = req.params.characterId;
       const { item_code, equip } = req.body;
 
       const character = await prisma.characters.findFirst({
-        character_id: character_id,
+        characterId: characterId,
       });
 
       if (!character) throw new CharacterNotFoundError();

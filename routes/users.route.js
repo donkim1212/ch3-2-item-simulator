@@ -12,7 +12,7 @@ const router = express.Router();
 router.post("/users/sign-up", uv.signUpValidation, async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, process.env.SALT);
+    const hashedPassword = await bcrypt.hash(password, process.env.SALT);
 
     await prisma.users.create({
       data: {
@@ -41,7 +41,7 @@ router.post("/users/sign-in", uv.signInValidation, async (req, res, next) => {
 
     if (!user) throw new Error("User not found.");
 
-    if (!bcrypt.compareSync(password, user.password)) {
+    if (!(await bcrypt.compare(password, user.password))) {
       msg = "Password didn't match.";
       return res.status(401).json({ message: msg });
     }
@@ -49,7 +49,7 @@ router.post("/users/sign-in", uv.signInValidation, async (req, res, next) => {
     const token = jwt.sign(
       { userId: user.userId, username: username },
       process.env.SECRET,
-      { expiresIn: 3600 },
+      { expiresIn: 1800 },
     );
     res.setHeader("authorization", "Bearer " + token);
 

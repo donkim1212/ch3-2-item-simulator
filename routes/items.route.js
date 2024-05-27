@@ -10,18 +10,19 @@ const router = express.Router();
  */
 router.post(
   "/items",
-  iv.itemCodeValidation,
+  iv.itemCodeBodyValidation,
   iv.itemNameValiation,
   iv.itemStatValidation,
   async (req, res, next) => {
-    const { itemCode, itemName, itemHealth, itemPower, itemPrice } = req.body;
-    let msg = `Successfully added the item: ${itemName}`;
     try {
+      const { itemCode, itemName, itemStat, itemPrice } = req.body;
+      let msg = `Successfully added the item: ${itemName}`;
+
       const item = await prisma.items.create({
-        data: { itemCode, itemName, itemHealth, itemPower, itemPrice },
+        data: { itemCode, itemName, itemStat, itemPrice },
       });
 
-      console.log(item);
+      if (item) console.log(item);
 
       return res.status(201).json({ message: msg });
     } catch (err) {
@@ -31,27 +32,31 @@ router.post(
 );
 
 /**
- * Read One
+ * Read One:
  */
 router.get(
-  "/items/:item_code",
-  iv.itemCodeValidation,
+  "/items/:itemCode",
+  iv.itemCodeParamsValidation,
   async (req, res, next) => {
-    const item_code = req.params.item_code;
+    const itemCode = req.params.itemCode;
     try {
       const item = await prisma.items.findFirst({
-        item_code: item_code,
+        select: {
+          itemCode: true,
+          itemName: true,
+          itemStat: true,
+          itemPrice: true,
+        },
+        where: { itemCode: itemCode },
       });
 
       if (!item) throw new ItemNotFoundError();
 
-      let msg = `Successfully found item with item_code ${item_code}`;
       return res.status(200).json({
-        message: msg,
-        item_code: item.itemCode,
-        item_name: item.itemName,
-        item_health: item.itemHealth,
-        item_power: item.itemPower,
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        itemStat: item.itemStat,
+        itemPrice: item.itemPrice,
       });
     } catch (err) {
       next(err);
@@ -62,14 +67,18 @@ router.get(
 /**
  * Read All
  */
-router.get("/items", async (req, res) => {
+router.get("/items", async (req, res, next) => {
   try {
-    const items = await prisma.characters.findMany({
-      select: { item_code, item_name },
-      orderBy: [{ item_code: "asc" }],
+    const items = await prisma.items.findMany({
+      select: {
+        itemCode: true,
+        itemName: true,
+        itemPrice: true,
+      },
+      orderBy: [{ itemCode: "asc" }],
     });
 
-    if (!items) return res.status(200).json({});
+    // if (!items) return res.status(200).json([]);
     return res.status(200).json(items);
   } catch (err) {
     next(err);
@@ -80,30 +89,23 @@ router.get("/items", async (req, res) => {
  * Update
  */
 router.put(
-  "/items/:item_code",
-  iv.itemCodeValidation,
+  "/items/:itemCode",
+  iv.itemCodeParamsValidation,
   iv.itemNameValiation,
   iv.itemStatValidation,
-  async (req, res) => {
+  async (req, res, next) => {
     try {
-      const item_code = req.params.item_code;
-      const { item_name, item_health, item_power } = req.body;
+      const itemCode = req.params.itemCode;
+      const { itemName, itemStat } = req.body;
       let msg = `Successfully updated the item.`;
 
-      const item = await prisma.items.findUnique({
-        where: { item_code: item_code },
-      });
-
-      if (!item) throw new ItemNotFoundError();
-
       await prisma.items.update({
-        data: {
-          item_name: item_name,
-          item_health: item_health,
-          item_power: item_power,
-        },
         where: {
-          item_code: item_code,
+          itemCode: itemCode,
+        },
+        data: {
+          itemName: itemName,
+          itemStat: itemStat,
         },
       });
 
