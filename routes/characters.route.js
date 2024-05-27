@@ -2,7 +2,7 @@ import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
 import cv from "../middlewares/validators/characters-validator.middleware.js";
 import ua from "../middlewares/auths/user-authenticator.middleware.js";
-import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
+import et from "../lib/errors/error-thrower.js";
 
 const router = express.Router();
 
@@ -16,7 +16,6 @@ router.post(
   async (req, res, next) => {
     try {
       const { characterName, user } = req.body;
-      console.log(user, "----------------------");
       const character = await prisma.characters.create({
         data: {
           characterName: characterName,
@@ -48,17 +47,15 @@ router.get(
     try {
       const characterId = req.params.characterId;
       let msg = `Successfully retrieved character data.`;
-      const character = await prisma.characters.findFirst({
-        where: { characterId: characterId },
-        select: {
+      const character = await et.characterChecker(
+        { characterId: characterId },
+        {
           characterName: true,
           health: true,
           power: true,
           money: req.body.user ? true : false,
         },
-      });
-
-      if (!character) throw new CharacterNotFoundError();
+      );
 
       return res.status(200).json({
         message: msg,
@@ -93,13 +90,11 @@ router.delete(
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
-      const cid = req.params.characterId;
-      let msg = `Successfully deleted character ${cid}`;
-      const character = await prisma.characters.delete({
-        where: { characterId: cid },
+      const characterId = req.params.characterId;
+      let msg = `Successfully deleted character ${characterId}`;
+      await prisma.characters.delete({
+        where: { characterId: characterId },
       });
-
-      if (!character) throw new CharacterNotFoundError();
 
       return res.status(200).json({ message: msg });
     } catch (err) {
