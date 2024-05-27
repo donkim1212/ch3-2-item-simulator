@@ -6,7 +6,7 @@ const errorHandler = (err, req, res, next) => {
     msg = "Failed: Tried to post with a duplicate key.";
     return res.status(500).json({ message: err.message });
   } else if (err.code === "P2025") {
-    return res.status(404).json({ message: err.meta.cause });
+    return res.status(404).json({ message: err.message });
   } else if (
     err.name === "ItemNotFoundError" ||
     err.name === "CharacterNotFoundError" ||
