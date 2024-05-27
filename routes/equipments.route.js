@@ -18,14 +18,22 @@ router.get(
     try {
       const { characterId } = req.params;
 
-      et.characterChecker(characterId);
+      et.characterChecker({ characterId });
 
-      const equipment = await prisma.equipments.findMany({
-        select: { itemCode: true, itemName: true },
-        where: { characterId: characterId },
-      });
+      const equipments = await prisma.$queryRaw`
+        SELECT eq.item_code,
+          i.name
+        FROM Equipments as eq
+        INNER JOIN Items as i
+        ON eq.item_code=i.item_code
+        WHERE eq.character_id like ${characterId}
+      `;
+      // const equipment = await prisma.equipments.findMany({
+      //   select: { itemCode: true, itemName: true },
+      //   where: { characterId: characterId },
+      // });
 
-      return res.status(200).json({ equipment });
+      return res.status(200).json([...equipments]);
     } catch (err) {
       next(err);
     }
@@ -43,38 +51,51 @@ router.put(
   iv.itemEquipValidation,
   async (req, res, next) => {
     try {
-      const characterId = req.params.characterId;
+      const { characterId } = req.params;
       const { itemCode, equip } = req.body;
 
       // error checkers
-      const character = et.characterChecker(characterId);
-      const item = et.itemChecker(itemCode);
-      const { equipment, inventory } = et.equipChecker(
+      const character = await et.characterChecker({ characterId });
+      const item = await et.itemChecker({ itemCode });
+      const { equipment, inventory } = await et.equipChecker(equip, {
         characterId,
         itemCode,
-        equip,
-      );
+      });
 
-      // can equip/unequip
-
+      // equip/unequip
       await prisma.$transaction(
         async (tx) => {
-          if (equip)
-            tx.equipments.create({
+          if (equip) {
+            await tx.equipments.create({
               data: {
                 characterId: characterId,
                 itemCode: itemCode,
               },
             });
-          else
-            tx.equipments.delete({
-              where: { itemCode: itemCode },
+          } else {
+            await tx.equipments.delete({
+              where: { equipmentId: equipment.equipmentId },
             });
+          }
 
-          prisma.inventories.update({
-            where: { characterId: characterId, itemCode: itemCode },
+          await tx.characters.update({
+            where: {
+              characterId: characterId,
+            },
             data: {
-              count: equip ? item.count - 1 : item.count + 1,
+              health: {
+                increment: equip ? item.itemStat.health : -item.itemStat.health,
+              },
+              power: {
+                increment: equip ? item.itemStat.power : -item.itemStat.power,
+              },
+            },
+          });
+
+          await prisma.inventories.update({
+            where: { inventoryId: inventory.inventoryId },
+            data: {
+              count: equip ? inventory.count - 1 : inventory.count + 1,
             },
           });
         },
