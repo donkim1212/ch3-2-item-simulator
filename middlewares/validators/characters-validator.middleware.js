@@ -34,27 +34,4 @@ const characterValidatorJoi = {
   },
 };
 
-const characterValidator = {
-  characterIdValidation: (req, res, next) => {
-    const cid = req.params.characterId;
-    // cid === undefined || cid === null || typeof cid != "number"
-    if (!cid) {
-      return res.status(400).json({
-        errorMessage: `Invalid characterId: ${cid}`,
-      });
-    }
-    next();
-  },
-
-  characterNameValidation: (req, res, next) => {
-    const { characterName } = req.body;
-    if (!characterName) {
-      return res.status(400).json({
-        errorMessage: `Invalid name: ${characterName}`,
-      });
-    }
-    next();
-  },
-};
-
-export { characterValidator, characterValidatorJoi };
+export default characterValidatorJoi;

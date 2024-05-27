@@ -82,4 +82,4 @@ const itemValidatorJoi = {
   },
 };
 
-export { itemValidatorJoi };
+export default itemValidatorJoi;
