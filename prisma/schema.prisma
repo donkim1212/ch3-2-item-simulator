@@ -36,7 +36,7 @@ model Characters {
 }
 
 model Inventories {
-  inventoryId Int @id @default(autoincrement()) @map("inventory_id")
+  inventoryId String @id @default(uuid()) @map("inventory_id")
 
   characters  Characters @relation(fields: [characterId], references: [characterId])
   characterId Int        @map("character_id")
@@ -47,7 +47,7 @@ model Inventories {
 }
 
 model Equipments {
-  equipmentId Int    @id @default(autoincrement()) @map("equipment_id")
+  equipmentId String    @id @default(uuid()) @map("equipment_id")
 
   characters  Characters @relation(fields: [characterId], references: [characterId])
   characterId Int        @map("character_id")
