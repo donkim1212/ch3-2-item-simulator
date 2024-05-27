@@ -1,6 +1,6 @@
 import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
-import { itemValidatorJoi as iv } from "../middlewares/validators/items-validator.middleware.js";
+import iv from "../middlewares/validators/items-validator.middleware.js";
 import ItemNotFoundError from "../lib/errors/item-not-found.error.js";
 
 const router = express.Router();
