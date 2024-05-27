@@ -15,7 +15,7 @@ const itemStatSchema = Joi.object({
 }).unknown(true);
 const itemCountSchema = Joi.object({
   count: Joi.number().integer().required(),
-});
+}).unknown(true);
 const itemEquipSchema = Joi.object({
   equip: Joi.boolean().strict().required(),
 }).unknown(true);
