@@ -60,7 +60,7 @@ router.get(
         },
       );
 
-      if (character.userId != user.userId) delete character.money;
+      if (!user || character.userId != user.userId) delete character.money;
       delete character.userId;
 
       return res.status(200).json({
