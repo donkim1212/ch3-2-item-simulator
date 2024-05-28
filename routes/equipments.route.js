@@ -1,10 +1,10 @@
 import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
-import { characterValidatorJoi as cv } from "../middlewares/validators/characters-validator.middleware.js";
-import { itemValidatorJoi as iv } from "../middlewares/validators/items-validator.middleware.js";
-import CharacterNotFoundError from "../lib/errors/character-not-found.error.js";
-import ItemNotFoundError from "../lib/errors/item-not-found.error.js";
-import InvalidEquipOperationError from "../lib/errors/invalid-equip-operation.error.js";
+import { Prisma } from "@prisma/client";
+import cv from "../middlewares/validators/characters-validator.middleware.js";
+import ua from "../middlewares/auths/user-authenticator.middleware.js";
+import iv from "../middlewares/validators/items-validator.middleware.js";
+import et from "../lib/errors/error-thrower.js";
 
 const router = express.Router();
 
@@ -16,21 +16,24 @@ router.get(
   cv.characterIdValidation,
   async (req, res, next) => {
     try {
-      const characterId = req.params.characterId;
+      const { characterId } = req.params;
 
-      const character = await prisma.characters.findFirst({
-        // TODO: check equipments table
-        select: {},
-        where: {
-          characterId: characterId,
-        },
-      });
+      await et.characterChecker({ characterId });
 
-      if (!character) throw new CharacterNotFoundError();
+      const equipments = await prisma.$queryRaw`
+        SELECT eq.item_code,
+          i.name
+        FROM Equipments as eq
+        INNER JOIN Items as i
+        ON eq.item_code=i.item_code
+        WHERE eq.character_id like ${characterId}
+      `;
+      // const equipment = await prisma.equipments.findMany({
+      //   select: { itemCode: true, itemName: true },
+      //   where: { characterId: characterId },
+      // });
 
-      return res.status(200).json({
-        data: character.equipped,
-      });
+      return res.status(200).json([...equipments]);
     } catch (err) {
       next(err);
     }
@@ -42,40 +45,68 @@ router.get(
  */
 router.put(
   "/equipments/:characterId",
+  ua.authStrict,
   cv.characterIdValidation,
   iv.itemCodeBodyValidation,
+  iv.itemEquipValidation,
   async (req, res, next) => {
     try {
-      const characterId = req.params.characterId;
-      const { item_code, equip } = req.body;
+      const { characterId } = req.params;
+      const { itemCode, equip, user } = req.body;
 
-      const character = await prisma.characters.findFirst({
-        characterId: characterId,
+      // error checkers
+      const character = await et.characterUserChecker(user, { characterId });
+      const item = await et.itemChecker({ itemCode });
+      const { equipment, inventory } = await et.equipChecker(equip, {
+        characterId,
+        itemCode,
       });
 
-      if (!character) throw new CharacterNotFoundError();
+      // equip/unequip
+      await prisma.$transaction(
+        async (tx) => {
+          if (equip) {
+            await tx.equipments.create({
+              data: {
+                characterId: characterId,
+                itemCode: itemCode,
+              },
+            });
+          } else {
+            await tx.equipments.delete({
+              where: { equipmentId: equipment.equipmentId },
+            });
+          }
 
-      const item = await prisma.items.findFirst({
-        item_code: item_code,
-      });
+          await tx.characters.update({
+            where: {
+              characterId: characterId,
+            },
+            data: {
+              health: {
+                increment: equip ? item.itemStat.health : -item.itemStat.health,
+              },
+              power: {
+                increment: equip ? item.itemStat.power : -item.itemStat.power,
+              },
+            },
+          });
 
-      if (!item) throw new ItemNotFoundError();
+          await prisma.inventories.update({
+            where: { inventoryId: inventory.inventoryId },
+            data: {
+              count: equip ? inventory.count - 1 : inventory.count + 1,
+            },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+      );
 
-      if (character.equipped.includes(item._id)) {
-        if (equip) throw new InvalidEquipOperationError();
-        const idx = character.equipped.indexOf(item._id);
-        character.equipped.splice(idx, 1);
-      } else {
-        if (!equip) throw new InvalidEquipOperationError();
-        character.equipped.push(item._id);
-      }
+      // Change Character stat???
+      // character.health += equip ? item.itemStat.health : -item.itemStat.health;
+      // character.power += equip ? item.itemStat.power : -item.itemStat.power;
 
-      character.health += equip ? item.health : -item.health;
-      character.power += equip ? item.power : -item.power;
-
-      await character.save();
-
-      let msg = `${equip ? "E" : "Une"}quipped the item '${item.item_name}'.`;
+      let msg = `${equip ? "E" : "Une"}quipped the item '${item.itemName}'.`;
       return res.status(200).json({ message: msg });
     } catch (err) {
       next(err);

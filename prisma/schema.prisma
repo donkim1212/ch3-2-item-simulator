@@ -36,20 +36,21 @@ model Characters {
 }
 
 model Inventories {
-  inventoryId Int @id @default(autoincrement()) @map("inventory_id")
+  inventoryId String @id @default(uuid()) @map("inventory_id")
 
-  characters  Characters @relation(fields: [characterId], references: [characterId])
+  characters  Characters @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
   characterId Int        @map("character_id")
 
+  items Items @relation(fields:[itemCode], references:[itemCode], onUpdate: Cascade)
   itemCode Int @map("item_code")
   count Int @default(0) @map("count")
   @@map("Inventories")
 }
 
 model Equipments {
-  equipmentId Int    @id @default(autoincrement()) @map("equipment_id")
+  equipmentId String    @id @default(uuid()) @map("equipment_id")
 
-  characters  Characters @relation(fields: [characterId], references: [characterId])
+  characters  Characters @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
   characterId Int        @map("character_id")
 
   itemCode Int @map("item_code")
@@ -62,6 +63,8 @@ model Items {
   itemName  String @unique @map("name")
   itemStat  Json   @map("item_stat")
   itemPrice Int    @map("item_price")
+
+  inventories Inventories[]
 
   @@map("Items")
 }

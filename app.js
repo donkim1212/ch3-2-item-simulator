@@ -6,6 +6,9 @@ import usersRouter from "./routes/users.route.js";
 import charactersRouter from "./routes/characters.route.js";
 import itemsRouter from "./routes/items.route.js";
 import equipmentsRouter from "./routes/equipments.route.js";
+import inventoriesRouter from "./routes/inventories.route.js";
+import shopsRouter from "./routes/shops.route.js";
+import worksRouter from "./routes/works.route.js";
 import errorHandler from "./middlewares/error-handler.middleware.js";
 
 const app = express();
@@ -16,7 +19,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(logger);
 
-app.use("/api", [usersRouter, charactersRouter, itemsRouter, equipmentsRouter]);
+app.use("/api", [
+  usersRouter,
+  charactersRouter,
+  itemsRouter,
+  equipmentsRouter,
+  inventoriesRouter,
+  shopsRouter,
+  worksRouter,
+]);
 
 app.use(errorHandler);
 

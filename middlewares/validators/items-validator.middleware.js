@@ -13,6 +13,9 @@ const itemStatSchema = Joi.object({
     power: Joi.number().integer().optional(),
   },
 }).unknown(true);
+const itemCountSchema = Joi.object({
+  count: Joi.number().integer().required(),
+}).unknown(true);
 const itemEquipSchema = Joi.object({
   equip: Joi.boolean().strict().required(),
 }).unknown(true);
@@ -69,17 +72,27 @@ const itemValidatorJoi = {
 
     next();
   },
+  itemCountValidation: async function (req, res, next) {
+    const validation = itemCountSchema.validate(req.body);
+    if (validation.error) {
+      console.log("itemCountValidation: ", validation.error.message);
+      let msg = "Failed: item count is not valid.";
+      return res.status(400).json({ message: msg });
+    }
+
+    next();
+  },
   itemEquipValidation: async function (req, res, next) {
     const validation = itemEquipSchema.validate(req.body);
 
     if (validation.error) {
       console.log("itemEquipValidation: ", validation.error.message);
       let msg = "Failed: 'equip' of type 'boolean' must be defined.";
-      return res.status(400).json({ errorMessage: msg });
+      return res.status(400).json({ message: msg });
     }
 
     next();
   },
 };
 
-export { itemValidatorJoi };
+export default itemValidatorJoi;
