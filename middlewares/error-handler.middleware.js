@@ -9,6 +9,10 @@ const errorHandler = (err, req, res, next) => {
     return res.status(404).json({ message: err.message });
   } else if (err.statusCode) {
     return res.status(err.statusCode).json({ message: err.message });
+  } else if (err.code === "P2002") {
+    msg = err.meta.modelName.substring(0, err.meta.modelName.length - 1);
+    msg += " already exists.";
+    return res.status(409).json({ message: msg });
   }
 
   return res.status(500).json({ message: msg });
