@@ -5,6 +5,7 @@ import ua from "../middlewares/auths/user-authenticator.middleware.js";
 import cv from "../middlewares/validators/characters-validator.middleware.js";
 import iv from "../middlewares/validators/items-validator.middleware.js";
 import et from "../lib/errors/error-thrower.js";
+
 const router = express.Router();
 
 /**
@@ -22,13 +23,15 @@ router.post(
       const { itemCode, count } = req.body;
 
       // error checker
-      const character = await et.characterChecker(
-        { characterId },
-        { money: true },
-      );
       const item = await et.itemChecker(
         { itemCode },
         { itemName: true, itemPrice: true },
+      );
+      const character = await et.characterMoneyChecker(
+        item.itemPrice,
+        count,
+        { characterId },
+        { money: true },
       );
       const inventory = await et.itemBuyChecker(
         {
@@ -37,6 +40,8 @@ router.post(
         },
         { inventoryId: true, count: true },
       );
+
+      const updatedMoney = character.money - item.itemPrice * count;
 
       // can buy
       if (character.money >= item.itemPrice) {
@@ -64,9 +69,7 @@ router.post(
             await tx.characters.update({
               where: { characterId: characterId },
               data: {
-                money: {
-                  increment: -item.itemPrice * count,
-                },
+                money: updatedMoney,
               },
             });
           },
@@ -74,7 +77,7 @@ router.post(
         );
       }
       let msg = `Bought ${count} ${item.itemName}(s).`;
-      return res.status(200).json({ message: msg });
+      return res.status(200).json({ message: msg, money: updatedMoney });
     } catch (err) {
       next(err);
     }
@@ -96,18 +99,16 @@ router.patch(
       const { characterId } = req.params;
       const { itemCode, count } = req.body;
 
-      const character = await et.characterChecker({ characterId });
+      const character = await et.characterMoneyChecker({ characterId });
       const item = await et.itemChecker({ itemCode });
       const inventory = await et.itemSellChecker(count, {
         characterId,
         itemCode,
       });
-      console.log("character money: ", character.money);
-      console.log("itemPrice: ", item.itemPrice, count);
-      console.log("sold money: ", Math.round(item.itemPrice / 60) * count);
+
       const updatedMoney =
-        character.money + Math.round(item.itemPrice / 60) * count;
-      console.log("updated money: ", updatedMoney);
+        character.money + Math.round(item.itemPrice * count * 0.6);
+
       await prisma.$transaction(
         async (tx) => {
           await tx.inventories.update({
@@ -129,7 +130,7 @@ router.patch(
         { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
       );
       let msg = `Sold ${count} ${item.itemName}(s).`;
-      return res.status(200).json({ message: msg });
+      return res.status(200).json({ message: msg, money: updatedMoney });
     } catch (err) {
       next(err);
     }
