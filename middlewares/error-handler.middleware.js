@@ -7,11 +7,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(500).json({ message: err.message });
   } else if (err.code === "P2025") {
     return res.status(404).json({ message: err.message });
-  } else if (
-    err.name === "ItemNotFoundError" ||
-    err.name === "CharacterNotFoundError" ||
-    err.name === "InvalidEquipOperationError"
-  ) {
+  } else if (err.statusCode) {
     return res.status(err.statusCode).json({ message: err.message });
   }
 
