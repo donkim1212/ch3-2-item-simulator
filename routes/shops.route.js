@@ -20,7 +20,7 @@ router.post(
   async (req, res, next) => {
     try {
       const { characterId } = req.params;
-      const { itemCode, count } = req.body;
+      const { itemCode, count, user } = req.body;
 
       // error checker
       const item = await et.itemChecker(
@@ -28,6 +28,7 @@ router.post(
         { itemName: true, itemPrice: true },
       );
       const character = await et.characterMoneyChecker(
+        user,
         item.itemPrice,
         count,
         { characterId },
@@ -97,9 +98,11 @@ router.patch(
     //
     try {
       const { characterId } = req.params;
-      const { itemCode, count } = req.body;
+      const { itemCode, count, user } = req.body;
 
-      const character = await et.characterMoneyChecker({ characterId });
+      const character = await et.characterMoneyChecker(user, null, null, {
+        characterId,
+      });
       const item = await et.itemChecker({ itemCode });
       const inventory = await et.itemSellChecker(count, {
         characterId,
