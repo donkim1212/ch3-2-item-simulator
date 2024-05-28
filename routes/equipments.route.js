@@ -18,7 +18,7 @@ router.get(
     try {
       const { characterId } = req.params;
 
-      et.characterChecker({ characterId });
+      await et.characterChecker({ characterId });
 
       const equipments = await prisma.$queryRaw`
         SELECT eq.item_code,
