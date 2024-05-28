@@ -52,10 +52,10 @@ router.put(
   async (req, res, next) => {
     try {
       const { characterId } = req.params;
-      const { itemCode, equip } = req.body;
+      const { itemCode, equip, user } = req.body;
 
       // error checkers
-      const character = await et.characterChecker({ characterId });
+      const character = await et.characterUserChecker(user, { characterId });
       const item = await et.itemChecker({ itemCode });
       const { equipment, inventory } = await et.equipChecker(equip, {
         characterId,
