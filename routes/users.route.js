@@ -65,7 +65,7 @@ router.post("/users/sign-in", uv.signInValidation, async (req, res, next) => {
  */
 router.get("/users/find/:username", async (req, res, next) => {
   // (NEED AUTH) get user's information
-  res.send(501).json({ message: "Feature not yet implemented." });
+  res.send(405).json({ message: "Feature not yet implemented." });
 });
 
 export default router;

@@ -83,7 +83,7 @@ router.put(
   cv.characterIdValidation,
   async (req, res, next) => {
     // const characterId = req.params.characterId;
-    res.send(501).json({ message: "Feature not yet implemented." });
+    res.send(405).json({ message: "Feature not yet implemented." });
   },
 );
 
