@@ -38,7 +38,7 @@ model Characters {
 model Inventories {
   inventoryId String @id @default(uuid()) @map("inventory_id")
 
-  characters  Characters @relation(fields: [characterId], references: [characterId])
+  characters  Characters @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
   characterId Int        @map("character_id")
 
   items Items @relation(fields:[itemCode], references:[itemCode], onUpdate: Cascade)
@@ -50,7 +50,7 @@ model Inventories {
 model Equipments {
   equipmentId String    @id @default(uuid()) @map("equipment_id")
 
-  characters  Characters @relation(fields: [characterId], references: [characterId])
+  characters  Characters @relation(fields: [characterId], references: [characterId], onDelete: Cascade)
   characterId Int        @map("character_id")
 
   itemCode Int @map("item_code")
