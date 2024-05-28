@@ -18,7 +18,9 @@ router.patch(
     //
     try {
       const { characterId } = req.params;
-      const character = await et.characterChecker(
+      const { user } = req.body;
+      const character = await et.characterUserChecker(
+        user,
         { characterId },
         { money: true },
       );
