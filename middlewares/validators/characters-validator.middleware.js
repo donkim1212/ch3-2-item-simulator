@@ -14,7 +14,7 @@ const characterValidatorJoi = {
     if (validation.error) {
       console.log("characterIdValidation: ", validation.error.message);
       let msg = `Invalid characterId: ${req.params.characterId}`;
-      return res.status(400).json({ errorMessage: msg });
+      return res.status(400).json({ message: msg });
     }
 
     req.params.characterId = parseInt(req.params.characterId);
@@ -27,7 +27,7 @@ const characterValidatorJoi = {
     if (validation.error) {
       console.log("characterNameValidation: ", validation.error.message);
       let msg = `Invalid name: ${req.body.characterName}`;
-      return res.status(400).json({ errorMessage: msg });
+      return res.status(400).json({ message: msg });
     }
 
     next();
