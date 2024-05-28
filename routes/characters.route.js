@@ -1,5 +1,6 @@
 import express from "express";
 import { prisma } from "../lib/utils/prisma/index.js";
+import { Prisma } from "@prisma/client";
 import cv from "../middlewares/validators/characters-validator.middleware.js";
 import ua from "../middlewares/auths/user-authenticator.middleware.js";
 import et from "../lib/errors/error-thrower.js";
@@ -46,6 +47,7 @@ router.get(
   async (req, res, next) => {
     try {
       const characterId = req.params.characterId;
+      const { user } = req.body;
       let msg = `Successfully retrieved character data.`;
       const character = await et.characterChecker(
         { characterId: characterId },
@@ -53,9 +55,13 @@ router.get(
           characterName: true,
           health: true,
           power: true,
-          money: req.body.user ? true : false,
+          money: true,
+          userId: true,
         },
       );
+
+      if (character.userId != user.userId) delete character.money;
+      delete character.userId;
 
       return res.status(200).json({
         message: msg,
@@ -91,10 +97,18 @@ router.delete(
   async (req, res, next) => {
     try {
       const characterId = req.params.characterId;
+      const { user } = req.body;
+      await et.characterUserChecker(user, { characterId }, { userId: true });
       let msg = `Successfully deleted character ${characterId}`;
-      await prisma.characters.delete({
-        where: { characterId: characterId },
-      });
+
+      await prisma.$transaction(
+        async (tx) => {
+          await tx.characters.delete({
+            where: { characterId: characterId },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+      );
 
       return res.status(200).json({ message: msg });
     } catch (err) {
