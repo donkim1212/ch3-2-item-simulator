@@ -8,7 +8,7 @@ const signUpSchema = Joi.object({
 
 const signInSchema = Joi.object({
   username: Joi.string().alphanum().lowercase().min(4).max(12).required(),
-  password: Joi.string().min(8).max(20).required(),
+  password: Joi.string().min(6).max(20).required(),
 });
 
 const userValidatorJoi = {
