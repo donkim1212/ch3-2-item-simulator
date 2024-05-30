@@ -26,8 +26,6 @@ const userAuthenticator = {
         next();
       });
     } catch (err) {
-      console.log(req.originalUrl, "Authentication failed: ", err.message);
-      // TODO: create custom error class to set status code
       return res.status(err.code).json({ message: err.message });
     }
   },
@@ -42,7 +40,6 @@ const userAuthenticator = {
       });
     } catch (err) {
       req.body.user = null;
-      console.log("authLight: ", err.name);
       next();
     }
   },
