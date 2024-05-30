@@ -6,6 +6,7 @@ import cv from "../middlewares/validators/characters-validator.middleware.js";
 import et from "../lib/errors/error-thrower.js";
 
 const router = express.Router();
+const EARNED = 100;
 
 /**
  * UPDATE: earn money
@@ -24,7 +25,7 @@ router.patch(
         { characterId },
         { money: true },
       );
-      const EARNED = 100;
+
       character.money += EARNED;
 
       await prisma.$transaction(
@@ -38,6 +39,7 @@ router.patch(
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
       );
+
       let msg = `You've earned ${EARNED}g.`;
       return res.status(200).json({ message: msg, money: character.money });
     } catch (err) {
