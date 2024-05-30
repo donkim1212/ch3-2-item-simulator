@@ -1,6 +1,5 @@
 import Joi from "joi";
 
-const isNotNumber = /[^0-9]/;
 const itemCodeSchema = Joi.object({
   itemCode: Joi.number().integer().min(1).required(),
 }).unknown(true);
@@ -21,9 +20,9 @@ const itemEquipSchema = Joi.object({
 }).unknown(true);
 
 const itemValidationErrorHandler = function (res, err, keyName) {
-  console.log(`Item ${keyName} validation failed: `, err.message);
-  let msg = `Item ${keyName} validation failed.`;
-  return res.status(400).json({ message: msg });
+  let msg = `Item ${keyName} validation failed`;
+  console.log(msg + ": ", err.message);
+  return res.status(400).json({ message: msg + "." });
 };
 
 const itemValidatorJoi = {
